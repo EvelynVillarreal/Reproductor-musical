@@ -6,7 +6,7 @@ public enum ParticleShape { Circle, Diamond, Line, Triangle }
 
 public class Particle
 {
-    public float X, Y, VX, VY;
+    public float X, Y, PrevX, PrevY, VX, VY;
     public float Life, MaxLife;
     public float Size;
     public Color Color;
@@ -48,18 +48,22 @@ public class ParticleSystem
 
             float angle = (float)_rng.NextDouble() * (float)Math.PI * 2;
             float spread = 0.5f + (float)_rng.NextDouble() * 0.5f;
-            float speed = 1f + (float)_rng.NextDouble() * 3f + bass * 8f + high * 3f;
+            float intensity = bass + mid + high;
+            float speed = 2f + (float)_rng.NextDouble() * 5f + bass * 18f + high * 8f + mid * 4f;
 
-            p.X = cx + (float)Math.Cos(angle) * 20f * spread;
-            p.Y = cy + (float)Math.Sin(angle) * 20f * spread;
+            float launchDist = 15f + bass * 50f + intensity * 20f;
+            p.X = cx + (float)Math.Cos(angle) * launchDist * spread;
+            p.Y = cy + (float)Math.Sin(angle) * launchDist * spread;
+            p.PrevX = p.X;
+            p.PrevY = p.Y;
 
             float rotOffset = high * 2f * (float)Math.PI;
             float finalAngle = angle + rotOffset;
             p.VX = (float)Math.Cos(finalAngle) * speed;
             p.VY = (float)Math.Sin(finalAngle) * speed - 0.5f;
 
-            p.MaxLife = p.Life = 40f + (float)_rng.NextDouble() * 80f + high * 30f;
-            p.Size = 1.5f + (float)_rng.NextDouble() * 3f + mid * 8f + bass * 3f;
+            p.MaxLife = p.Life = 50f + (float)_rng.NextDouble() * 100f + high * 40f + bass * 20f;
+            p.Size = 3f + (float)_rng.NextDouble() * 4f + mid * 10f + bass * 4f;
             p.Rotation = (float)_rng.NextDouble() * 360f;
             p.RotationSpeed = (float)_rng.NextDouble() * 10f - 5f + high * 20f;
 
@@ -78,11 +82,13 @@ public class ParticleSystem
         foreach (var p in _particles)
         {
             if (!p.Active) continue;
+            p.PrevX = p.X;
+            p.PrevY = p.Y;
             p.X += p.VX;
             p.Y += p.VY;
-            p.VY += 0.03f;
-            p.VX *= 0.98f;
-            p.VY *= 0.98f;
+            p.VY += 0.02f;
+            p.VX *= 0.99f;
+            p.VY *= 0.99f;
             p.Rotation += p.RotationSpeed;
             p.Life -= 1f;
             if (p.Life <= 0) p.Active = false;
@@ -92,12 +98,29 @@ public class ParticleSystem
     public void Draw(Graphics g, float time)
     {
         g.SmoothingMode = SmoothingMode.AntiAlias;
+
         foreach (var p in _particles)
         {
             if (!p.Active) continue;
             float lifeRatio = p.Life / p.MaxLife;
             int alpha = (int)(lifeRatio * 220);
             float size = p.Size * lifeRatio;
+
+            int glowAlpha = (int)(lifeRatio * 60);
+            float glowSize = size * 2.5f;
+            using (var glowBrush = new SolidBrush(Color.FromArgb(glowAlpha, p.Color)))
+            {
+                g.FillEllipse(glowBrush, p.X - glowSize / 2f, p.Y - glowSize / 2f, glowSize, glowSize);
+            }
+
+            float trailDist = Math.Abs(p.X - p.PrevX) + Math.Abs(p.Y - p.PrevY);
+            if (trailDist > 1f)
+            {
+                using (var trailPen = new Pen(Color.FromArgb((int)(alpha * 0.4f), p.Color), Math.Max(0.5f, size * 0.3f)))
+                {
+                    g.DrawLine(trailPen, p.PrevX, p.PrevY, p.X, p.Y);
+                }
+            }
 
             using (var brush = new SolidBrush(Color.FromArgb(alpha, p.Color)))
             {
