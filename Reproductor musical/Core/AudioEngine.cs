@@ -7,7 +7,6 @@ public class AudioEngine : IDisposable
     private AudioFileReader _audioFile;
     private SampleAggregator _aggregator;
 
-    // Datos del espectro FFT (256 bandas)
     public float[] SpectrumData { get; private set; } = new float[256];
     public float[] WaveformData { get; private set; } = new float[1024];
     public float Volume => _audioFile?.Volume ?? 0f;
@@ -37,7 +36,7 @@ public class AudioEngine : IDisposable
                 e.Result[i].X * e.Result[i].X +
                 e.Result[i].Y * e.Result[i].Y
             );
-            SpectrumData[i] = SpectrumData[i] * 0.8f + (float)(magnitude * 3.0) * 0.2f;
+            SpectrumData[i] = SpectrumData[i] * 0.45f + (float)(magnitude * 3.0) * 0.55f;
         }
         FftDataAvailable?.Invoke(this, SpectrumData);
     }
