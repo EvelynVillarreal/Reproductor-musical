@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -142,37 +142,31 @@ namespace Reproductor_musical.Forms
         }
     }
 
-    // Loop de renderizado con doble buffer
+    // Loop de renderizado con doble buffer optimizado para altos FPS (sin recrear Bitmaps)
     private void OnRenderTick(object sender, EventArgs e)
     {
-        int w = _canvas.Width, h = _canvas.Height;
-        if (w <= 0 || h <= 0) return;
+        int ancho = _canvas.Width, alto = _canvas.Height;
+        if (ancho <= 0 || alto <= 0) return;
 
-        Bitmap current = _useBufferA ? _bufferA : _bufferB;
-        if (current == null || current.Width != w || current.Height != h)
+        Bitmap bufferActual = _useBufferA ? _bufferA : _bufferB;
+        if (bufferActual == null || bufferActual.Width != ancho || bufferActual.Height != alto)
         {
-            current?.Dispose();
-            current = new Bitmap(w, h);
-            if (_useBufferA) _bufferA = current; else _bufferB = current;
+            if (_useBufferA) { _bufferA?.Dispose(); _bufferA = new Bitmap(ancho, alto); bufferActual = _bufferA; }
+            else { _bufferB?.Dispose(); _bufferB = new Bitmap(ancho, alto); bufferActual = _bufferB; }
         }
 
-        using (var g = Graphics.FromImage(current))
-            _visualizer.Render(g, w, h);
+        using (var graficos = Graphics.FromImage(bufferActual))
+        {
+            _visualizer.Render(graficos, ancho, alto);
+        }
 
-        var old = (Bitmap)_canvas.Image;
-        _canvas.Image = current;
+        _canvas.Image = bufferActual;
         _useBufferA = !_useBufferA;
-        if (old != null && old != current)
-        {
-            if (old == _bufferA) _bufferA = null;
-            if (old == _bufferB) _bufferB = null;
-            old.Dispose();
-        }
 
         if (!_isDraggingProgress && _audio.TotalTime.TotalSeconds > 0)
         {
-            double progress = _audio.CurrentTime.TotalSeconds / _audio.TotalTime.TotalSeconds;
-            _tbProgress.Value = (int)(progress * 1000);
+            double progreso = _audio.CurrentTime.TotalSeconds / _audio.TotalTime.TotalSeconds;
+            _tbProgress.Value = (int)(progreso * 1000);
             _lblTime.Text = $"{_audio.CurrentTime:mm\\:ss} / {_audio.TotalTime:mm\\:ss}";
         }
     }

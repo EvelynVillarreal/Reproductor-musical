@@ -34,8 +34,8 @@ public class ParticleSystem
     {
         float centroX = ancho / 2f, centroY = alto / 2f;
 
-        // Aumentar explosividad de la emisión
-        int cantidadEmision = (int)(bajos * 60 + medios * 15) + 2;
+        // Aumentar explosividad de la emisión y empezar desde CERO
+        int cantidadEmision = (int)(bajos * 80 + medios * 20);
 
         _temporizadorRafaga += bajos * 6f;
         int emisionRafaga = (int)_temporizadorRafaga;
@@ -51,8 +51,8 @@ public class ParticleSystem
             float dispersion = 0.5f + (float)_aleatorio.NextDouble() * 0.5f;
             float intensidad = bajos + medios + altos;
             
-            // Mayor velocidad e impacto
-            float velocidad = 3f + (float)_aleatorio.NextDouble() * 5f + bajos * 40f + altos * 15f + medios * 10f;
+            // Mayor velocidad e impacto, empieza en casi cero
+            float velocidad = (float)_aleatorio.NextDouble() * 2f * intensidad + bajos * 50f + altos * 20f + medios * 15f;
 
             // Mayor distancia de lanzamiento
             float distanciaLanzamiento = 15f + bajos * 120f + intensidad * 40f;
