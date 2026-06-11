@@ -222,10 +222,11 @@ public class Visualizer
         for (int capa = 0; capa < 6; capa++)
         {
             float escalaCapa = 1f - capa * 0.12f;
-            float radio = radioMaximo * escalaCapa * (1f + _energiaBajosSuavizada * 0.3f);
+            // Usamos la energía cruda de los bajos (_bassEnergy) para dar un efecto de parpadeo fuerte al tamaño
+            float radio = radioMaximo * escalaCapa * (1f + _bassEnergy * 0.6f);
             
-            // Puntos fijos por capa para evitar deformaciones bruscas y lag
-            int puntosGeometria = 4 + capa * 2; 
+            // Restauramos la complejidad geométrica reactiva a los altos, sumado a los puntos base
+            int puntosGeometria = 4 + capa * 2 + (int)(_energiaAltosSuavizada * 8f); 
             
             float rotacion = _time * (20f + _energiaMediosSuavizada * 30f) * (capa % 2 == 0 ? 1 : -1) + capa * 30f;
             float matiz = (capa * 50f + _time * 40f + _energiaAltosSuavizada * 100f) % 360f;
@@ -255,7 +256,7 @@ public class Visualizer
             }
         }
 
-        float tamanoCentro = radioMaximo * 0.15f * (1f + _energiaBajosSuavizada * 0.8f);
+        float tamanoCentro = radioMaximo * 0.15f * (1f + _bassEnergy * 0.8f); // Parpadeo fuerte en el centro
         float matizCentro = (_time * 60f + _energiaAltosSuavizada * 200f) % 360f;
         using (var pincelCentro = new SolidBrush(Color.FromArgb(200, HsvToColor(matizCentro, 1f, 1f))))
         {
@@ -264,12 +265,14 @@ public class Visualizer
                 tamanoCentro, tamanoCentro);
         }
 
-        int cantidadOrbitas = 8; // Fijo para un movimiento más estable
+        // Restauramos órbitas dinámicas para que reaccionen a la canción
+        int cantidadOrbitas = 8 + (int)(_energiaMediosSuavizada * 12f); 
         PointF[] puntosOrbita = new PointF[cantidadOrbitas];
         for (int i = 0; i < cantidadOrbitas; i++)
         {
             float angulo = (float)i / cantidadOrbitas * (float)(Math.PI * 2) + _time * (1f + _energiaMediosSuavizada);
-            float distanciaOrbita = radioMaximo * 0.6f * (1f + _energiaBajosSuavizada * 0.4f);
+            // Efecto de parpadeo y rebote usando spectrum y energía directa
+            float distanciaOrbita = radioMaximo * 0.6f * (1f + _spectrum[(i * 10) % _spectrum.Length] * 0.5f) * (1f + _bassEnergy * 0.3f);
             float tamanoPunto = 4f + _energiaAltosSuavizada * 10f; // Puntos más grandes
             float matizOrbita = (matizCentro + i * (360f / cantidadOrbitas)) % 360f;
 
