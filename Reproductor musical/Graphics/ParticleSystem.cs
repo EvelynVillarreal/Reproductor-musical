@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
@@ -19,9 +19,9 @@ public class Particle
 public class ParticleSystem
 {
     private readonly Particle[] _particles;
-    private readonly Random _rng = new Random();
-    private int _nextSlot;
-    private float _burstTimer;
+    private readonly Random _aleatorio = new Random();
+    private int _siguienteEspacio;
+    private float _temporizadorRafaga;
 
     public ParticleSystem(int maxParticles)
     {
@@ -30,50 +30,55 @@ public class ParticleSystem
             _particles[i] = new Particle();
     }
 
-    public void Update(float bass, float mid, float high, int width, int height, float time)
+    public void Update(float bajos, float medios, float altos, int ancho, int alto, float tiempo)
     {
-        float cx = width / 2f, cy = height / 2f;
+        float centroX = ancho / 2f, centroY = alto / 2f;
 
-        int emitCount = (int)(bass * 20 + mid * 5) + 1;
+        // Aumentar explosividad de la emisión
+        int cantidadEmision = (int)(bajos * 60 + medios * 15) + 2;
 
-        _burstTimer += bass * 2f;
-        int burstEmit = (int)_burstTimer;
-        _burstTimer -= burstEmit;
-        emitCount += burstEmit * 5;
+        _temporizadorRafaga += bajos * 6f;
+        int emisionRafaga = (int)_temporizadorRafaga;
+        _temporizadorRafaga -= emisionRafaga;
+        cantidadEmision += emisionRafaga * 10;
 
-        for (int e = 0; e < emitCount; e++)
+        for (int e = 0; e < cantidadEmision; e++)
         {
-            Particle p = _particles[_nextSlot % _particles.Length];
-            _nextSlot++;
+            Particle p = _particles[_siguienteEspacio % _particles.Length];
+            _siguienteEspacio++;
 
-            float angle = (float)_rng.NextDouble() * (float)Math.PI * 2;
-            float spread = 0.5f + (float)_rng.NextDouble() * 0.5f;
-            float intensity = bass + mid + high;
-            float speed = 2f + (float)_rng.NextDouble() * 5f + bass * 18f + high * 8f + mid * 4f;
+            float angulo = (float)_aleatorio.NextDouble() * (float)Math.PI * 2;
+            float dispersion = 0.5f + (float)_aleatorio.NextDouble() * 0.5f;
+            float intensidad = bajos + medios + altos;
+            
+            // Mayor velocidad e impacto
+            float velocidad = 3f + (float)_aleatorio.NextDouble() * 5f + bajos * 40f + altos * 15f + medios * 10f;
 
-            float launchDist = 15f + bass * 50f + intensity * 20f;
-            p.X = cx + (float)Math.Cos(angle) * launchDist * spread;
-            p.Y = cy + (float)Math.Sin(angle) * launchDist * spread;
+            // Mayor distancia de lanzamiento
+            float distanciaLanzamiento = 15f + bajos * 120f + intensidad * 40f;
+            p.X = centroX + (float)Math.Cos(angulo) * distanciaLanzamiento * dispersion;
+            p.Y = centroY + (float)Math.Sin(angulo) * distanciaLanzamiento * dispersion;
             p.PrevX = p.X;
             p.PrevY = p.Y;
 
-            float rotOffset = high * 2f * (float)Math.PI;
-            float finalAngle = angle + rotOffset;
-            p.VX = (float)Math.Cos(finalAngle) * speed;
-            p.VY = (float)Math.Sin(finalAngle) * speed - 0.5f;
+            float desfaseRotacion = altos * 2f * (float)Math.PI;
+            float anguloFinal = angulo + desfaseRotacion;
+            p.VX = (float)Math.Cos(anguloFinal) * velocidad;
+            p.VY = (float)Math.Sin(anguloFinal) * velocidad - 0.5f;
 
-            p.MaxLife = p.Life = 50f + (float)_rng.NextDouble() * 100f + high * 40f + bass * 20f;
-            p.Size = 3f + (float)_rng.NextDouble() * 4f + mid * 10f + bass * 4f;
-            p.Rotation = (float)_rng.NextDouble() * 360f;
-            p.RotationSpeed = (float)_rng.NextDouble() * 10f - 5f + high * 20f;
+            p.MaxLife = p.Life = 50f + (float)_aleatorio.NextDouble() * 100f + altos * 60f + bajos * 40f;
+            // Mayor tamaño
+            p.Size = 4f + (float)_aleatorio.NextDouble() * 5f + medios * 15f + bajos * 15f;
+            p.Rotation = (float)_aleatorio.NextDouble() * 360f;
+            p.RotationSpeed = (float)_aleatorio.NextDouble() * 10f - 5f + altos * 30f;
 
-            float hue = (time * 30f + _rng.Next(360) + high * 200f) % 360f;
-            p.Color = Visualizer.HsvToColor(hue, 1f, 1f);
+            float matiz = (tiempo * 30f + _aleatorio.Next(360) + altos * 200f) % 360f;
+            p.Color = Visualizer.HsvToColor(matiz, 1f, 1f);
 
-            float roll = (float)_rng.NextDouble();
-            if (roll < 0.4f) p.Shape = ParticleShape.Circle;
-            else if (roll < 0.65f) p.Shape = ParticleShape.Diamond;
-            else if (roll < 0.85f) p.Shape = ParticleShape.Line;
+            float dado = (float)_aleatorio.NextDouble();
+            if (dado < 0.4f) p.Shape = ParticleShape.Circle;
+            else if (dado < 0.65f) p.Shape = ParticleShape.Diamond;
+            else if (dado < 0.85f) p.Shape = ParticleShape.Line;
             else p.Shape = ParticleShape.Triangle;
 
             p.Active = true;

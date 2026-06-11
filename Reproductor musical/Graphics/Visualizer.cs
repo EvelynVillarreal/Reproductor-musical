@@ -116,100 +116,104 @@ public class Visualizer
     private void DrawCircularWave(Graphics g, int width, int height)
     {
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        float cx = width / 2f, cy = height / 2f;
-        float baseRadius = Math.Min(width, height) * 0.2f;
-        float pulseRadius = baseRadius + _bassEnergy * 120f;
+        float centroX = width / 2f, centroY = height / 2f;
+        float radioBase = Math.Min(width, height) * 0.2f;
+        // Parpadeo mucho más fuerte para el radio principal de la onda
+        float radioPulso = radioBase + _bassEnergy * 300f; 
 
-        int points = 256;
-        PointF[] outerPts = new PointF[points];
-        PointF[] midPts = new PointF[points];
-        PointF[] innerPts = new PointF[points];
+        int cantidadPuntos = 256;
+        PointF[] puntosExteriores = new PointF[cantidadPuntos];
+        PointF[] puntosMedios = new PointF[cantidadPuntos];
+        PointF[] puntosInteriores = new PointF[cantidadPuntos];
 
-        float hueBase = (_time * 30f) % 360f;
+        float matizBase = (_time * 30f) % 360f;
 
-        for (int i = 0; i < points; i++)
+        for (int i = 0; i < cantidadPuntos; i++)
         {
-            float angle = (float)i / points * (float)(Math.PI * 2);
-            float wave = _spectrum[i] * 180f;
-            float midWave = _spectrum[(i + 50) % _spectrum.Length] * 80f;
-            float highWave = _spectrum[(i + 100) % _spectrum.Length] * 40f;
+            float angulo = (float)i / cantidadPuntos * (float)(Math.PI * 2);
+            // Ondas más exageradas
+            float onda = _spectrum[i] * 350f;
+            float ondaMedia = _spectrum[(i + 50) % _spectrum.Length] * 150f;
+            float ondaAlta = _spectrum[(i + 100) % _spectrum.Length] * 80f;
 
-            float r = pulseRadius + wave;
-            float rMid = pulseRadius * 0.65f + midWave + _bassEnergy * 30f;
-            float rInner = pulseRadius * 0.3f + highWave + _midEnergy * 20f;
+            float rExterior = radioPulso + onda;
+            float rMedio = radioPulso * 0.65f + ondaMedia + _bassEnergy * 80f;
+            float rInterior = radioPulso * 0.3f + ondaAlta + _midEnergy * 50f;
 
-            outerPts[i] = new PointF(cx + (float)Math.Cos(angle) * r,
-                                      cy + (float)Math.Sin(angle) * r);
-            midPts[i] = new PointF(cx + (float)Math.Cos(angle) * rMid,
-                                    cy + (float)Math.Sin(angle) * rMid);
-            innerPts[i] = new PointF(cx + (float)Math.Cos(angle) * rInner,
-                                      cy + (float)Math.Sin(angle) * rInner);
+            puntosExteriores[i] = new PointF(centroX + (float)Math.Cos(angulo) * rExterior,
+                                             centroY + (float)Math.Sin(angulo) * rExterior);
+            puntosMedios[i] = new PointF(centroX + (float)Math.Cos(angulo) * rMedio,
+                                         centroY + (float)Math.Sin(angulo) * rMedio);
+            puntosInteriores[i] = new PointF(centroX + (float)Math.Cos(angulo) * rInterior,
+                                             centroY + (float)Math.Sin(angulo) * rInterior);
         }
 
         using (var path = new GraphicsPath())
         {
-            path.AddPolygon(outerPts);
-            using (var brush = new SolidBrush(Color.FromArgb(60, HsvToColor(hueBase, 0.8f, 1f))))
+            path.AddPolygon(puntosExteriores);
+            using (var brush = new SolidBrush(Color.FromArgb(60, HsvToColor(matizBase, 0.8f, 1f))))
                 g.FillPath(brush, path);
-            using (var pen = new Pen(HsvToColor(hueBase, 0.9f, 1f), 2f))
-                g.DrawPolygon(pen, outerPts);
+            using (var pen = new Pen(HsvToColor(matizBase, 0.9f, 1f), 2f))
+                g.DrawPolygon(pen, puntosExteriores);
         }
 
         using (var path = new GraphicsPath())
         {
-            path.AddPolygon(midPts);
-            using (var brush = new SolidBrush(Color.FromArgb(80, HsvToColor((hueBase + 120) % 360, 0.8f, 1f))))
+            path.AddPolygon(puntosMedios);
+            using (var brush = new SolidBrush(Color.FromArgb(80, HsvToColor((matizBase + 120) % 360, 0.8f, 1f))))
                 g.FillPath(brush, path);
-            using (var pen = new Pen(HsvToColor((hueBase + 120) % 360, 0.9f, 1f), 1.5f))
-                g.DrawPolygon(pen, midPts);
+            using (var pen = new Pen(HsvToColor((matizBase + 120) % 360, 0.9f, 1f), 1.5f))
+                g.DrawPolygon(pen, puntosMedios);
         }
 
         using (var path = new GraphicsPath())
         {
-            path.AddPolygon(innerPts);
-            using (var brush = new SolidBrush(Color.FromArgb(100, HsvToColor((hueBase + 240) % 360, 0.8f, 1f))))
+            path.AddPolygon(puntosInteriores);
+            using (var brush = new SolidBrush(Color.FromArgb(100, HsvToColor((matizBase + 240) % 360, 0.8f, 1f))))
                 g.FillPath(brush, path);
-            using (var pen = new Pen(HsvToColor((hueBase + 240) % 360, 0.9f, 1f), 1.5f))
-                g.DrawPolygon(pen, innerPts);
+            using (var pen = new Pen(HsvToColor((matizBase + 240) % 360, 0.9f, 1f), 1.5f))
+                g.DrawPolygon(pen, puntosInteriores);
         }
 
-        int spikeCount = 36;
-        for (int i = 0; i < spikeCount; i++)
+        int cantidadPicos = 36;
+        for (int i = 0; i < cantidadPicos; i++)
         {
-            float angle = (float)i / spikeCount * (float)(Math.PI * 2) + _time * 0.5f;
-            int specIdx = (i * 7) % _spectrum.Length;
-            float spikeLen = _spectrum[specIdx] * 150f + _highEnergy * 50f;
-            float innerLen = 5f + _bassEnergy * 30f;
+            float angulo = (float)i / cantidadPicos * (float)(Math.PI * 2) + _time * 0.5f;
+            int indiceEspec = (i * 7) % _spectrum.Length;
+            // Picos mucho más largos y notorios
+            float longitudPico = _spectrum[indiceEspec] * 250f + _highEnergy * 100f;
+            float longitudInterior = 5f + _bassEnergy * 80f;
 
-            PointF p1 = new PointF(cx + (float)Math.Cos(angle) * innerLen,
-                                   cy + (float)Math.Sin(angle) * innerLen);
-            PointF p2 = new PointF(cx + (float)Math.Cos(angle) * (pulseRadius * 0.3f + spikeLen),
-                                   cy + (float)Math.Sin(angle) * (pulseRadius * 0.3f + spikeLen));
-            float hue = (hueBase + i * 10f) % 360f;
-            using (var pen = new Pen(Color.FromArgb(100, HsvToColor(hue, 1f, 1f)), 1.5f))
+            PointF p1 = new PointF(centroX + (float)Math.Cos(angulo) * longitudInterior,
+                                   centroY + (float)Math.Sin(angulo) * longitudInterior);
+            PointF p2 = new PointF(centroX + (float)Math.Cos(angulo) * (radioPulso * 0.3f + longitudPico),
+                                   centroY + (float)Math.Sin(angulo) * (radioPulso * 0.3f + longitudPico));
+            float matiz = (matizBase + i * 10f) % 360f;
+            using (var pen = new Pen(Color.FromArgb(100, HsvToColor(matiz, 1f, 1f)), 2.5f))
                 g.DrawLine(pen, p1, p2);
         }
 
-        float centerSize = pulseRadius * 0.2f + _bassEnergy * 40f + _highEnergy * 20f;
-        using (var centerBrush = new SolidBrush(Color.FromArgb(180, HsvToColor((hueBase + 180) % 360, 1f, 1f))))
+        // Centro que palpita dramáticamente
+        float tamanoCentroOnda = radioPulso * 0.2f + _bassEnergy * 100f + _highEnergy * 40f;
+        using (var pincelCentro = new SolidBrush(Color.FromArgb(180, HsvToColor((matizBase + 180) % 360, 1f, 1f))))
         {
-            g.FillEllipse(centerBrush,
-                cx - centerSize / 2f, cy - centerSize / 2f,
-                centerSize, centerSize);
+            g.FillEllipse(pincelCentro,
+                centroX - tamanoCentroOnda / 2f, centroY - tamanoCentroOnda / 2f,
+                tamanoCentroOnda, tamanoCentroOnda);
         }
 
-        int dotCount = 12;
-        for (int i = 0; i < dotCount; i++)
+        int cantidadPuntosFlotantes = 12;
+        for (int i = 0; i < cantidadPuntosFlotantes; i++)
         {
-            float angle = (float)i / dotCount * (float)(Math.PI * 2) + _time * (1f + _midEnergy * 2f);
-            float orbitRadius = pulseRadius * 0.7f + _spectrum[(i * 20) % _spectrum.Length] * 50f;
-            float dotSize = 3f + _spectrum[(i * 15) % _spectrum.Length] * 15f;
-            PointF dotPos = new PointF(
-                cx + (float)Math.Cos(angle) * orbitRadius,
-                cy + (float)Math.Sin(angle) * orbitRadius);
-            float hue = (hueBase + i * 30f) % 360f;
-            using (var dotBrush = new SolidBrush(HsvToColor(hue, 1f, 1f)))
-                g.FillEllipse(dotBrush, dotPos.X - dotSize / 2, dotPos.Y - dotSize / 2, dotSize, dotSize);
+            float angulo = (float)i / cantidadPuntosFlotantes * (float)(Math.PI * 2) + _time * (1f + _midEnergy * 2f);
+            float radioOrbita = radioPulso * 0.7f + _spectrum[(i * 20) % _spectrum.Length] * 100f;
+            float tamanoPunto = 4f + _spectrum[(i * 15) % _spectrum.Length] * 30f;
+            PointF posPunto = new PointF(
+                centroX + (float)Math.Cos(angulo) * radioOrbita,
+                centroY + (float)Math.Sin(angulo) * radioOrbita);
+            float matizPunto = (matizBase + i * 30f) % 360f;
+            using (var pincelPunto = new SolidBrush(HsvToColor(matizPunto, 1f, 1f)))
+                g.FillEllipse(pincelPunto, posPunto.X - tamanoPunto / 2, posPunto.Y - tamanoPunto / 2, tamanoPunto, tamanoPunto);
         }
     }
 
@@ -222,8 +226,8 @@ public class Visualizer
         for (int capa = 0; capa < 6; capa++)
         {
             float escalaCapa = 1f - capa * 0.12f;
-            // Usamos la energía cruda de los bajos (_bassEnergy) para dar un efecto de parpadeo fuerte al tamaño
-            float radio = radioMaximo * escalaCapa * (1f + _bassEnergy * 0.6f);
+            // Usamos la energía cruda de los bajos (_bassEnergy) pero con un multiplicador EXTREMO para un parpadeo gigante
+            float radio = radioMaximo * escalaCapa * (1f + _bassEnergy * 1.5f);
             
             // Restauramos la complejidad geométrica reactiva a los altos, sumado a los puntos base
             int puntosGeometria = 4 + capa * 2 + (int)(_energiaAltosSuavizada * 8f); 
