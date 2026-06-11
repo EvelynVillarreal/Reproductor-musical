@@ -242,10 +242,11 @@ public class Visualizer
 
             if (capa > 0 && capa % 2 == 0)
             {
-                for (int i = 0; i < puntosGeometria; i++)
+                int totalVertices = puntosGeometria * 2;
+                for (int i = 0; i < totalVertices; i++)
                 {
-                    int siguiente = (i + 2) % puntosGeometria;
-                    float matizLinea = (matiz + i * 20f) % 360f;
+                    int siguiente = (i + 2) % totalVertices;
+                    float matizLinea = (matiz + i * 10f) % 360f;
                     
                     // Líneas internas más gruesas y visibles
                     using (var pincelDelgado = new Pen(Color.FromArgb(120, HsvToColor(matizLinea, 0.8f, 1f)), 2f + _energiaMediosSuavizada * 1.5f))
