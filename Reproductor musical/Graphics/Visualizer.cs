@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
@@ -10,6 +10,11 @@ public class Visualizer
     private float[] _spectrum = new float[256];
     private float _bassEnergy, _midEnergy, _highEnergy;
     private float _time = 0f;
+
+    // Variables para suavizar el movimiento y evitar lag (Regla: codigoEspañol)
+    private float _energiaBajosSuavizada;
+    private float _energiaMediosSuavizada;
+    private float _energiaAltosSuavizada;
 
     public VisualizationMode Mode { get; set; } = VisualizationMode.SpectrumBars;
     public Color PrimaryColor { get; set; } = Color.Cyan;
@@ -38,6 +43,12 @@ public class Visualizer
     public void Render(Graphics g, int width, int height)
     {
         _time += 0.016f;
+
+        // Suavizado de la energía para transiciones agradables
+        float factorSuavizado = 0.15f;
+        _energiaBajosSuavizada += (_bassEnergy - _energiaBajosSuavizada) * factorSuavizado;
+        _energiaMediosSuavizada += (_midEnergy - _energiaMediosSuavizada) * factorSuavizado;
+        _energiaAltosSuavizada += (_highEnergy - _energiaAltosSuavizada) * factorSuavizado;
 
         DrawDynamicBackground(g, width, height);
 
@@ -205,72 +216,79 @@ public class Visualizer
     private void DrawGeometricPulse(Graphics g, int width, int height)
     {
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        float cx = width / 2f, cy = height / 2f;
-        float maxRadius = Math.Min(width, height) * 0.35f;
+        float centroX = width / 2f, centroY = height / 2f;
+        float radioMaximo = Math.Min(width, height) * 0.35f;
 
-        for (int layer = 0; layer < 6; layer++)
+        for (int capa = 0; capa < 6; capa++)
         {
-            float layerScale = 1f - layer * 0.12f;
-            float radius = maxRadius * layerScale * (1f + _bassEnergy * 0.3f);
-            int points = 4 + layer * 2 + (int)(_highEnergy * 8f);
-            float rotation = _time * (20f + _midEnergy * 30f) * (layer % 2 == 0 ? 1 : -1) + layer * 30f;
-            float hue = (layer * 50f + _time * 40f + _highEnergy * 100f) % 360f;
-            int alpha = 80 + (int)(_bassEnergy * 100f);
+            float escalaCapa = 1f - capa * 0.12f;
+            float radio = radioMaximo * escalaCapa * (1f + _energiaBajosSuavizada * 0.3f);
+            
+            // Puntos fijos por capa para evitar deformaciones bruscas y lag
+            int puntosGeometria = 4 + capa * 2; 
+            
+            float rotacion = _time * (20f + _energiaMediosSuavizada * 30f) * (capa % 2 == 0 ? 1 : -1) + capa * 30f;
+            float matiz = (capa * 50f + _time * 40f + _energiaAltosSuavizada * 100f) % 360f;
+            int opacidad = 100 + (int)(_energiaBajosSuavizada * 100f); // Mayor opacidad base
 
-            PointF[] star = StarPolygon(cx, cy, radius * 0.5f, radius, points, rotation);
+            PointF[] estrella = StarPolygon(centroX, centroY, radio * 0.5f, radio, puntosGeometria, rotacion);
 
-            using (var pen = new Pen(Color.FromArgb(Math.Min(alpha, 255), HsvToColor(hue, 1f, 1f)), 1.5f + _bassEnergy * 3f))
+            // Líneas principales más gruesas
+            using (var pincelGordo = new Pen(Color.FromArgb(Math.Min(opacidad, 255), HsvToColor(matiz, 1f, 1f)), 3f + _energiaBajosSuavizada * 4f))
             {
-                g.DrawPolygon(pen, star);
+                g.DrawPolygon(pincelGordo, estrella);
             }
 
-            if (layer > 0 && layer % 2 == 0)
+            if (capa > 0 && capa % 2 == 0)
             {
-                for (int i = 0; i < points; i++)
+                for (int i = 0; i < puntosGeometria; i++)
                 {
-                    int next = (i + 2) % points;
-                    float hueLine = (hue + i * 20f) % 360f;
-                    using (var linePen = new Pen(Color.FromArgb(40, HsvToColor(hueLine, 0.8f, 1f)), 1f))
+                    int siguiente = (i + 2) % puntosGeometria;
+                    float matizLinea = (matiz + i * 20f) % 360f;
+                    
+                    // Líneas internas más gruesas y visibles
+                    using (var pincelDelgado = new Pen(Color.FromArgb(120, HsvToColor(matizLinea, 0.8f, 1f)), 2f + _energiaMediosSuavizada * 1.5f))
                     {
-                        g.DrawLine(linePen, star[i], star[next]);
+                        g.DrawLine(pincelDelgado, estrella[i], estrella[siguiente]);
                     }
                 }
             }
         }
 
-        float centerSize = maxRadius * 0.15f * (1f + _bassEnergy * 0.8f);
-        float centerHue = (_time * 60f + _highEnergy * 200f) % 360f;
-        using (var centerBrush = new SolidBrush(Color.FromArgb(200, HsvToColor(centerHue, 1f, 1f))))
+        float tamanoCentro = radioMaximo * 0.15f * (1f + _energiaBajosSuavizada * 0.8f);
+        float matizCentro = (_time * 60f + _energiaAltosSuavizada * 200f) % 360f;
+        using (var pincelCentro = new SolidBrush(Color.FromArgb(200, HsvToColor(matizCentro, 1f, 1f))))
         {
-            g.FillEllipse(centerBrush,
-                cx - centerSize / 2f, cy - centerSize / 2f,
-                centerSize, centerSize);
+            g.FillEllipse(pincelCentro,
+                centroX - tamanoCentro / 2f, centroY - tamanoCentro / 2f,
+                tamanoCentro, tamanoCentro);
         }
 
-        int orbitCount = 8 + (int)(_midEnergy * 12f);
-        PointF[] orbitPts = new PointF[orbitCount];
-        for (int i = 0; i < orbitCount; i++)
+        int cantidadOrbitas = 8; // Fijo para un movimiento más estable
+        PointF[] puntosOrbita = new PointF[cantidadOrbitas];
+        for (int i = 0; i < cantidadOrbitas; i++)
         {
-            float angle = (float)i / orbitCount * (float)(Math.PI * 2) + _time * (1f + _midEnergy);
-            float orbitDist = maxRadius * 0.6f * (1f + _spectrum[(i * 10) % _spectrum.Length] * 0.5f);
-            float size = 2f + _spectrum[(i * 8) % _spectrum.Length] * 20f;
-            float hue = (centerHue + i * (360f / orbitCount)) % 360f;
+            float angulo = (float)i / cantidadOrbitas * (float)(Math.PI * 2) + _time * (1f + _energiaMediosSuavizada);
+            float distanciaOrbita = radioMaximo * 0.6f * (1f + _energiaBajosSuavizada * 0.4f);
+            float tamanoPunto = 4f + _energiaAltosSuavizada * 10f; // Puntos más grandes
+            float matizOrbita = (matizCentro + i * (360f / cantidadOrbitas)) % 360f;
 
-            orbitPts[i] = new PointF(
-                cx + (float)Math.Cos(angle) * orbitDist,
-                cy + (float)Math.Sin(angle) * orbitDist);
+            puntosOrbita[i] = new PointF(
+                centroX + (float)Math.Cos(angulo) * distanciaOrbita,
+                centroY + (float)Math.Sin(angulo) * distanciaOrbita);
 
-            using (var brush = new SolidBrush(HsvToColor(hue, 1f, 1f)))
+            using (var pincelOrbita = new SolidBrush(HsvToColor(matizOrbita, 1f, 1f)))
             {
-                g.FillEllipse(brush, orbitPts[i].X - size / 2, orbitPts[i].Y - size / 2, size, size);
+                g.FillEllipse(pincelOrbita, puntosOrbita[i].X - tamanoPunto / 2, puntosOrbita[i].Y - tamanoPunto / 2, tamanoPunto, tamanoPunto);
             }
         }
 
-        if (orbitCount > 2)
+        if (cantidadOrbitas > 2)
         {
-            using (var webPen = new Pen(Color.FromArgb(30, Color.White), 0.5f))
+            // Telaraña conectando la órbita, más visible
+            using (var pincelRed = new Pen(Color.FromArgb(90, Color.White), 1.5f))
             {
-                g.DrawPolygon(webPen, orbitPts);
+                g.DrawPolygon(pincelRed, puntosOrbita);
             }
         }
     }
