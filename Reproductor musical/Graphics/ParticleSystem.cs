@@ -6,15 +6,16 @@ namespace Reproductor_musical.Visuals
 {
     public enum ParticleShape { Circle, Diamond, Line, Triangle }
 
-    public class Particle{
-    public float X, Y, PrevX, PrevY, VX, VY;
-    public float Life, MaxLife;
-    public float Size;
-    public Color Color;
-    public bool Active;
-    public ParticleShape Shape;
-    public float Rotation;
-    public float RotationSpeed;
+    public class Particle
+    {
+        public float X, Y, PrevX, PrevY, VX, VY;
+        public float Life, MaxLife;
+        public float Size;
+        public Color Color;
+        public bool Active;
+        public ParticleShape Shape;
+        public float Rotation;
+        public float RotationSpeed;
     }
 
     public class ParticleSystem
@@ -31,7 +32,7 @@ namespace Reproductor_musical.Visuals
                 _particles[i] = new Particle();
         }
 
-        public void Update(float bajos, float medios, int ancho, int alto, float tiempo)
+        public void Update(float bajos, float medios, float altos, int ancho, int alto, float tiempo)
         {
             float centroX = ancho / 2f, centroY = alto / 2f;
 
@@ -49,9 +50,9 @@ namespace Reproductor_musical.Visuals
 
                 float angulo = (float)_aleatorio.NextDouble() * (float)Math.PI * 2;
                 float dispersion = 0.5f + (float)_aleatorio.NextDouble() * 0.5f;
-                float intensidad = bajos + medios;
+                float intensidad = bajos + medios + altos;
 
-                float velocidad = (float)_aleatorio.NextDouble() * 2f * intensidad + bajos * 50f + medios * 15f;
+                float velocidad = (float)_aleatorio.NextDouble() * 2f * intensidad + bajos * 50f + altos * 20f + medios * 15f;
 
                 float distanciaLanzamiento = 15f + bajos * 120f + intensidad * 40f;
                 p.X = centroX + (float)Math.Cos(angulo) * distanciaLanzamiento * dispersion;
@@ -59,16 +60,17 @@ namespace Reproductor_musical.Visuals
                 p.PrevX = p.X;
                 p.PrevY = p.Y;
 
-                float anguloFinal = angulo;
+                float desfaseRotacion = altos * 2f * (float)Math.PI;
+                float anguloFinal = angulo + desfaseRotacion;
                 p.VX = (float)Math.Cos(anguloFinal) * velocidad;
                 p.VY = (float)Math.Sin(anguloFinal) * velocidad - 0.5f;
 
-                p.MaxLife = p.Life = 50f + (float)_aleatorio.NextDouble() * 100f + bajos * 40f;
+                p.MaxLife = p.Life = 50f + (float)_aleatorio.NextDouble() * 100f + altos * 60f + bajos * 40f;
                 p.Size = 4f + (float)_aleatorio.NextDouble() * 5f + medios * 15f + bajos * 15f;
                 p.Rotation = (float)_aleatorio.NextDouble() * 360f;
-                p.RotationSpeed = (float)_aleatorio.NextDouble() * 10f - 5f;
+                p.RotationSpeed = (float)_aleatorio.NextDouble() * 10f - 5f + altos * 30f;
 
-                float matiz = (tiempo * 30f + _aleatorio.Next(360)) % 360f;
+                float matiz = (tiempo * 30f + _aleatorio.Next(360) + altos * 200f) % 360f;
                 p.Color = VisualUtils.HsvToColor(matiz, 1f, 1f);
 
                 float dado = (float)_aleatorio.NextDouble();
@@ -170,5 +172,4 @@ namespace Reproductor_musical.Visuals
             }
         }
     }
-
 }

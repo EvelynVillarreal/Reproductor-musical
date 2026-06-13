@@ -16,14 +16,20 @@ namespace Reproductor_musical.Visuals
 
             for (int i = 0; i < barCount; i++)
             {
-                float specIndex = (float)i / barCount * 120;
-                float targetMagnitude = spectrum[(int)specIndex] * height * 1.2f;
+                float n = (float)i / barCount;
+
+                float floatingIndex = (float)Math.Pow(n, 1.15) * 119;
+                int idxLow = (int)floatingIndex;
+                int idxHigh = Math.Min(idxLow + 1, spectrum.Length - 1);
+                float frac = floatingIndex - idxLow;
+                float rawValue = spectrum[idxLow] * (1f - frac) + spectrum[idxHigh] * frac;
+
+                float ganancia = 1.0f + n * 3.0f;
+                float targetMagnitude = rawValue * height * ganancia;
                 targetMagnitude = Math.Min(targetMagnitude, height / 2f);
 
-                if (targetMagnitude > _smoothedBars[i])
-                    _smoothedBars[i] = targetMagnitude;
-                else
-                    _smoothedBars[i] = _smoothedBars[i] * 0.88f + targetMagnitude * 0.12f;
+                float diff = targetMagnitude - _smoothedBars[i];
+                _smoothedBars[i] += diff * (diff > 0 ? 0.55f : 0.35f);
 
                 float magnitude = Math.Max(_smoothedBars[i], 2f);
 

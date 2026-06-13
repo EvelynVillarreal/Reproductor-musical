@@ -59,7 +59,7 @@ namespace Reproductor_musical.Visuals
                     _spectrumBars.Render(g, width, height, _spectrum, _time);
                     break;
                 case VisualizationMode.Particles:
-                    _particles.Update(_bassEnergy, _midEnergy, width, height, _time);
+                    _particles.Update(_bassEnergy, _midEnergy, _highEnergy, width, height, _time);
                     _particles.Draw(g, _time);
                     break;
                 case VisualizationMode.WaveCircle:
