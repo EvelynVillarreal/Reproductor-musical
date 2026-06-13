@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Windows.Forms;
 using Reproductor_musical.Forms;
+using Reproductor_musical.Controllers;
 
 namespace Reproductor_musical
 {
     internal static class Program
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
         [STAThread]
         static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+
+            var controller = new PlayerController();
+            var view = new MainForm(controller);
+
+            Application.Run(view);
         }
     }
 }
