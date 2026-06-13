@@ -1,62 +1,65 @@
 ﻿using NAudio.Wave;
 using System;
 
-public class AudioEngine : IDisposable
+namespace Reproductor_musical.Core
 {
-    private WaveOutEvent _waveOut;
-    private AudioFileReader _audioFile;
-    private SampleAggregator _aggregator;
-
-    public float[] SpectrumData { get; private set; } = new float[256];
-    public float[] WaveformData { get; private set; } = new float[1024];
-    public float Volume => _audioFile?.Volume ?? 0f;
-    public TimeSpan CurrentTime => _audioFile?.CurrentTime ?? TimeSpan.Zero;
-    public TimeSpan TotalTime => _audioFile?.TotalTime ?? TimeSpan.Zero;
-    public bool IsPlaying => _waveOut?.PlaybackState == PlaybackState.Playing;
-
-    public event EventHandler<float[]> FftDataAvailable;
-
-    public void Load(string filePath)
+    public class AudioEngine : IDisposable
     {
-        Stop();
-        _audioFile = new AudioFileReader(filePath);
-        _aggregator = new SampleAggregator(_audioFile, 2048);
-        _aggregator.FftCalculated += OnFftCalculated;
-        _aggregator.PerformFFT = true;
+        private WaveOutEvent _waveOut;
+        private AudioFileReader _audioFile;
+        private SampleAggregator _aggregator;
 
-        _waveOut = new WaveOutEvent();
-        _waveOut.Init(_aggregator);
-    }
+        public float[] SpectrumData { get; private set; } = new float[256];
+        public float[] WaveformData { get; private set; } = new float[1024];
+        public float Volume => _audioFile?.Volume ?? 0f;
+        public TimeSpan CurrentTime => _audioFile?.CurrentTime ?? TimeSpan.Zero;
+        public TimeSpan TotalTime => _audioFile?.TotalTime ?? TimeSpan.Zero;
+        public bool IsPlaying => _waveOut?.PlaybackState == PlaybackState.Playing;
 
-    private void OnFftCalculated(object sender, FftEventArgs e)
-    {
-        for (int i = 0; i < SpectrumData.Length; i++)
+        public event EventHandler<float[]> FftDataAvailable;
+
+        public void Load(string filePath)
         {
-            double magnitude = Math.Sqrt(
-                e.Result[i].X * e.Result[i].X +
-                e.Result[i].Y * e.Result[i].Y
-            );
-            SpectrumData[i] = SpectrumData[i] * 0.45f + (float)(magnitude * 3.0) * 0.55f;
+            Stop();
+            _audioFile = new AudioFileReader(filePath);
+            _aggregator = new SampleAggregator(_audioFile, 2048);
+            _aggregator.FftCalculated += OnFftCalculated;
+            _aggregator.PerformFFT = true;
+
+            _waveOut = new WaveOutEvent();
+            _waveOut.Init(_aggregator);
         }
-        FftDataAvailable?.Invoke(this, SpectrumData);
-    }
 
-    public void Play() => _waveOut?.Play();
-    public void Pause() => _waveOut?.Pause();
-    public void Stop()
-    {
-        _waveOut?.Stop();
-        _waveOut?.Dispose();
-        _audioFile?.Dispose();
-        _waveOut = null;
-        _audioFile = null;
-    }
-    public void SetVolume(float vol) { if (_audioFile != null) _audioFile.Volume = vol; }
-    public void Seek(double seconds)
-    {
-        if (_audioFile != null)
-            _audioFile.CurrentTime = TimeSpan.FromSeconds(seconds);
-    }
+        private void OnFftCalculated(object sender, FftEventArgs e)
+        {
+            for (int i = 0; i < SpectrumData.Length; i++)
+            {
+                double magnitude = Math.Sqrt(
+                    e.Result[i].X * e.Result[i].X +
+                    e.Result[i].Y * e.Result[i].Y
+                );
+                SpectrumData[i] = SpectrumData[i] * 0.45f + (float)(magnitude * 3.0) * 0.55f;
+            }
+            FftDataAvailable?.Invoke(this, SpectrumData);
+        }
 
-    public void Dispose() => Stop();
+        public void Play() => _waveOut?.Play();
+        public void Pause() => _waveOut?.Pause();
+        public void Stop()
+        {
+            _waveOut?.Stop();
+            _waveOut?.Dispose();
+            _audioFile?.Dispose();
+            _waveOut = null;
+            _audioFile = null;
+        }
+        public void SetVolume(float vol) { if (_audioFile != null) _audioFile.Volume = vol; }
+        public void Seek(double seconds)
+        {
+            if (_audioFile != null)
+                _audioFile.CurrentTime = TimeSpan.FromSeconds(seconds);
+        }
+
+        public void Dispose() => Stop();
+    }
 }
