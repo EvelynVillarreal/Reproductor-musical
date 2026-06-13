@@ -38,7 +38,7 @@ namespace Reproductor_musical.Core
                     e.Result[i].X * e.Result[i].X +
                     e.Result[i].Y * e.Result[i].Y
                 );
-                SpectrumData[i] = SpectrumData[i] * 0.45f + (float)(magnitude * 3.0) * 0.55f;
+                SpectrumData[i] = SpectrumData[i] * 0.45f + (float)(magnitude * 0.003) * 0.55f;
             }
             FftDataAvailable?.Invoke(this, SpectrumData);
         }
