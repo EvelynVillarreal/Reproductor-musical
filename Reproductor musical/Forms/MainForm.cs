@@ -175,7 +175,8 @@ namespace Reproductor_musical.Forms
             _controller.UpdatePlaybackInfo();
             if (!_isDraggingProgress && _controller.CurrentSong.TotalTime.TotalSeconds > 0)
             {
-                _tbProgress.Value = (int)(_controller.GetProgress() * 1000);
+                int progress = (int)(_controller.GetProgress() * 1000);
+                _tbProgress.Value = Math.Min(progress, _tbProgress.Maximum);
                 _lblTime.Text = $"{_controller.CurrentSong.CurrentTime:mm\\:ss} / {_controller.CurrentSong.TotalTime:mm\\:ss}";
             }
         }
