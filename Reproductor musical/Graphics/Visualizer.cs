@@ -16,7 +16,6 @@ namespace Reproductor_musical.Visuals
         private float[] _spectrum = new float[256];
         private float _bassEnergy, _midEnergy, _highEnergy;
         private float _time;
-        private float _smoothedBass, _smoothedMid, _smoothedHigh;
 
         public VisualizationMode Mode { get; set; } = VisualizationMode.SpectrumBars;
 
@@ -47,11 +46,6 @@ namespace Reproductor_musical.Visuals
         public void Render(Graphics g, int width, int height)
         {
             _time += 0.016f;
-            float factor = 0.15f;
-            _smoothedBass += (_bassEnergy - _smoothedBass) * factor;
-            _smoothedMid += (_midEnergy - _smoothedMid) * factor;
-            _smoothedHigh += (_highEnergy - _smoothedHigh) * factor;
-
             DrawBackground(g, width, height);
 
             switch (Mode)
@@ -60,14 +54,14 @@ namespace Reproductor_musical.Visuals
                     _spectrumBars.Render(g, width, height, _spectrum, _time);
                     break;
                 case VisualizationMode.Particles:
-                    _particles.Update(_bassEnergy, _midEnergy, _highEnergy, width, height, _time);
+                    _particles.Update(_bassEnergy, _midEnergy, width, height, _time);
                     _particles.Draw(g, _time);
                     break;
                 case VisualizationMode.WaveCircle:
                     _waveCircle.Render(g, width, height, _spectrum, _bassEnergy, _midEnergy, _highEnergy, _time);
                     break;
                 case VisualizationMode.GeometricPulse:
-                    _geometricPulse.Render(g, width, height, _spectrum, _bassEnergy, _midEnergy, _highEnergy, _time, _smoothedBass, _smoothedMid, _smoothedHigh);
+                    _geometricPulse.Render(g, width, height, _bassEnergy, _midEnergy, _highEnergy, _time);
                     break;
             }
 
