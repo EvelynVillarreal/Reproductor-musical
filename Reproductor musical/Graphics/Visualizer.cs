@@ -4,7 +4,7 @@ using System.Drawing.Drawing2D;
 
 namespace Reproductor_musical.Visuals
 {
-    public enum VisualizationMode { SpectrumBars, Particles, WaveCircle, GeometricPulse, FilledSpectrumWave }
+    public enum VisualizationMode { SpectrumBars, Particles, WaveCircle, GeometricPulse, FilledSpectrumWave, Oscilloscope}
     public class Visualizer
     {
         private readonly ParticleSystem _particles;
@@ -12,6 +12,7 @@ namespace Reproductor_musical.Visuals
         private readonly WaveCircleRenderer _waveCircle;
         private readonly GeometricPulseRenderer _geometricPulse;
         private readonly FilledSpectrumWaveRenderer _filledWave;
+        private readonly OscilloscopeRenderer _oscilloscope;
 
         private float[] _spectrum = new float[256];
         private float _bassEnergy, _midEnergy, _highEnergy;
@@ -27,6 +28,7 @@ namespace Reproductor_musical.Visuals
             _waveCircle = new WaveCircleRenderer();
             _geometricPulse = new GeometricPulseRenderer();
             _filledWave = new FilledSpectrumWaveRenderer();
+            _oscilloscope = new OscilloscopeRenderer();
         }
 
         public void UpdateSpectrum(float[] spectrum)
@@ -71,6 +73,9 @@ namespace Reproductor_musical.Visuals
                     break;
                 case VisualizationMode.FilledSpectrumWave:
                     _filledWave.Render(g, width, height, _spectrum, _bassEnergy, _highEnergy, _time);
+                    break;
+                case VisualizationMode.Oscilloscope:
+                    _oscilloscope.Render(g, width, height, _spectrum, _bassEnergy, _highEnergy, _time);
                     break;
             }
 

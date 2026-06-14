@@ -68,7 +68,7 @@ namespace Reproductor_musical.Forms
                 ForeColor = Color.White,
                 BackColor = Color.FromArgb(40, 40, 60)
             };
-            _cmbMode.Items.AddRange(new[] { "Espectro de Barras", "Particulas", "Onda Circular", "Geometria", "Onda Rellenada" });
+            _cmbMode.Items.AddRange(new[] { "Espectro de Barras", "Particulas", "Onda Circular", "Geometria", "Onda Rellenada", "Osciloscopio" });
             _cmbMode.SelectedIndex = 0;
             _cmbMode.SelectedIndexChanged += (s, e) =>
                 _controller.Visualizer.Mode = (VisualizationMode)_cmbMode.SelectedIndex;

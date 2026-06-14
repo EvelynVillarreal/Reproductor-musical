@@ -104,6 +104,7 @@
     <Compile Include="Graphics\ParticleSystem.cs" />
     <Compile Include="Graphics\Renderers\FilledSpectrumWaveRenderer.cs" />
     <Compile Include="Graphics\Renderers\GeometricPulseRenderer.cs" />
+    <Compile Include="Graphics\Renderers\OscilloscopeRenderer.cs" />
     <Compile Include="Graphics\Renderers\SpectrumBarsRenderer.cs" />
     <Compile Include="Graphics\Renderers\VisualUtils.cs" />
     <Compile Include="Graphics\Renderers\WaveCircleRenderer.cs" />
