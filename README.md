@@ -13,9 +13,11 @@ Un reproductor de música interactivo escrito en **C# (WinForms)** enfocado en l
 El visualizador cuenta con varios modos que pueden seleccionarse desde la interfaz gráfica:
 
 1.  **Espectro de Barras:** Una representación clásica con barras verticales que reflejan la intensidad por bandas de frecuencia usando un degradado dinámico.
-2.  **Partículas (`ParticleSystem.cs`):** Un emisor que funciona desde cero: si no hay música, no hay partículas. Cuando entran los bajos y medios, se generan explosiones agresivas de figuras geométricas (círculos, diamantes, líneas y triángulos) que salen despedidas desde el centro y giran según las notas más agudas.
+2.  **Partículas (`ParticleSystem.cs`):** Un emisor parametrizable y altamente reactivo que funciona desde cero: si no hay música, no hay partículas. Cuando entran los bajos y medios, se generan explosiones agresivas de figuras geométricas (círculos, diamantes, líneas y triángulos) que salen despedidas desde el centro y giran según las notas más agudas.
 3.  **Onda Circular:** Una onda concéntrica en constante movimiento. Cuenta con picos reactivos que crecen fuertemente con la frecuencia general de la canción y un centro palpitante que reacciona a los "golpes" de la música.
-4.  **Pulso Geométrico:** Figuras en forma de estrella concéntricas que reaccionan armando "telarañas" y mutando la cantidad de vértices según los tonos agudos de la pista. El tamaño general palpita intensa y repentinamente con los bajos de la canción, manteniendo una rotación fluida y constante.
+4.  **Pulso Geométrico:** Animación geométrica renovada con figuras en forma de estrella concéntricas que reaccionan armando "telarañas" y mutando la cantidad de vértices según los tonos agudos de la pista. El tamaño general palpita intensa y repentinamente con los bajos de la canción, manteniendo una rotación fluida y constante.
+5.  **Onda Rellenada (Filled Spectrum Wave):** Una representación fluida que dibuja el espectro como una onda suave y rellena, creando un efecto visual continuo y vibrante.
+6.  **Osciloscopio:** Una animación que simula un osciloscopio clásico, mostrando las ondas de audio en tiempo real con líneas continuas y fluidas.
 
 ## 🛠 Arquitectura del Código
 
