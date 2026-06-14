@@ -21,12 +21,11 @@ El visualizador cuenta con varios modos que pueden seleccionarse desde la interf
 
 ## 🛠 Arquitectura del Código
 
-La base de código respeta fuertemente principios de **Clean Code** y **Reglas Locales (`/codigoEspañol`)**:
+La base de código respeta fuertemente principios de **Clean Code**:
 
 *   **`Forms/MainForm.cs`:** Maneja la interfaz de usuario, el loop principal de dibujado gráfico (Timer a 16ms) usando buffers reutilizables, y el enrutamiento de los eventos del usuario hacia el motor de audio.
 *   **`Core/AudioEngine.cs`:** (Motor interno) Gestiona la decodificación de los archivos de audio, el control de la pista y notifica los resultados de la Transformada Rápida de Fourier (FFT) listos para la visualización.
 *   **`Graphics/Visualizer.cs`:** Recibe los datos FFT y orquesta los diferentes modos gráficos. Contiene el mapeo matemático que traduce `_bassEnergy`, `_midEnergy` y `_highEnergy` en radios, rotaciones y matices HSV.
 *   **`Graphics/ParticleSystem.cs`:** Un micro-motor dedicado a mantener el ciclo de vida, la física, el movimiento (Velocidad `VX/VY`) y el dibujo individual de cientos de partículas simultáneas.
 
-## 📝 Actualización Continua (Documentación Viva)
-*Este README se actualizará de forma automática tras nuevas integraciones significativas siguiendo la regla `/readmeVivo`.*
+
