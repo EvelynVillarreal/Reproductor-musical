@@ -12,6 +12,9 @@ namespace Reproductor_musical.Visuals
         private readonly SolidBrush _brush = new SolidBrush(Color.White);
         private readonly Pen _pen = new Pen(Color.White, 1.5f);
 
+        // EL SECRETO DE LA FLUIDEZ: Arreglo de amortiguación para el círculo
+        private readonly float[] _smoothedWave = new float[CirclePoints];
+
         public WaveCircleRenderer()
         {
             for (int i = 0; i < CirclePoints; i++)
@@ -26,7 +29,7 @@ namespace Reproductor_musical.Visuals
         {
             float cx = width / 2f, cy = height / 2f;
             float baseRadius = Math.Min(width, height) * 0.2f;
-            float pulseRadius = baseRadius + bassEnergy * 120f;
+            float pulseRadius = baseRadius + (bassEnergy * 350f) + (midEnergy * 120f);
 
             PointF[] outerPts = new PointF[CirclePoints];
             PointF[] midPts = new PointF[CirclePoints];
@@ -36,9 +39,38 @@ namespace Reproductor_musical.Visuals
 
             for (int i = 0; i < CirclePoints; i++)
             {
-                float wave = spectrum[i] * 180f;
-                float midWave = spectrum[(i + 50) % spectrum.Length] * 80f;
-                float highWave = spectrum[(i + 100) % spectrum.Length] * 40f;
+                // 1. EL TRUCO DEL ESPEJO (Symmetry)
+                // Vamos de 0 a 100% en la mitad del círculo, y de 100% a 0 en la otra mitad
+                int halfPoints = CirclePoints / 2;
+                float percent = i <= halfPoints
+                    ? (float)i / halfPoints
+                    : (float)(CirclePoints - i) / halfPoints;
+
+                // 2. CURVA DE POTENCIA LOGARÍTMICA (Heredada de tu compañero)
+                float floatingIndex = (float)Math.Pow(percent, 1.15) * 119;
+                int idxLow = (int)floatingIndex;
+                int idxHigh = Math.Min(idxLow + 1, spectrum.Length - 1);
+                float frac = floatingIndex - idxLow;
+                float rawValue = spectrum[idxLow] * (1f - frac) + spectrum[idxHigh] * frac;
+
+                // Ganancia dinámica para levantar los agudos
+                float ganancia = 1.0f + percent * 3.0f;
+                float targetValue = rawValue * ganancia;
+
+                // 3. FÍSICA ASIMÉTRICA (Fluidez y Ataque/Decaimiento)
+                float diff = targetValue - _smoothedWave[i];
+                _smoothedWave[i] += diff * (diff > 0 ? 0.55f : 0.35f);
+                float smoothVal = _smoothedWave[i];
+
+                // 4. CÁLCULOS FINALES DE LA ONDA
+                float wave = (float)Math.Pow(smoothVal, 1.2) * 400f;
+
+                // Usamos índices desfasados para las ondas internas para dar profundidad 3D
+                int midIdx = (i + 30) % CirclePoints;
+                float midWave = _smoothedWave[midIdx] * 80f;
+
+                int innerIdx = (i + 60) % CirclePoints;
+                float highWave = _smoothedWave[innerIdx] * 40f;
 
                 float r = pulseRadius + wave;
                 float rMid = pulseRadius * 0.65f + midWave + bassEnergy * 30f;
@@ -49,6 +81,7 @@ namespace Reproductor_musical.Visuals
                 innerPts[i] = new PointF(cx + _cosTable[i] * rInner, cy + _sinTable[i] * rInner);
             }
 
+            // --- RENDERIZADO DE LOS POLÍGONOS (Sin cambios) ---
             using (var path = new GraphicsPath())
             {
                 path.AddPolygon(outerPts);
@@ -79,13 +112,16 @@ namespace Reproductor_musical.Visuals
                 g.DrawPolygon(_pen, innerPts);
             }
 
+            // --- DESTELLOS RÍTMICOS (Spikes) ---
             int spikeCount = 36;
             _pen.Width = 1.5f;
             for (int i = 0; i < spikeCount; i++)
-            {
+            {   
                 int lutIdx = (i * (CirclePoints / spikeCount)) % CirclePoints;
-                int specIdx = (i * 7) % spectrum.Length;
-                float spikeLen = spectrum[specIdx] * 150f + highEnergy * 50f;
+
+                // Usamos la onda suavizada para los picos también para evitar saltos raros
+                float smoothSpike = _smoothedWave[lutIdx];
+                float spikeLen = smoothSpike * 350f + highEnergy * 150f;
                 float innerLen = 5f + bassEnergy * 30f;
 
                 PointF p1 = new PointF(cx + _cosTable[lutIdx] * innerLen, cy + _sinTable[lutIdx] * innerLen);
@@ -95,6 +131,7 @@ namespace Reproductor_musical.Visuals
                 g.DrawLine(_pen, p1, p2);
             }
 
+            // Esfera central
             float centerSize = pulseRadius * 0.2f + bassEnergy * 40f + highEnergy * 20f;
             _brush.Color = Color.FromArgb(180, VisualUtils.HsvToColor((hueBase + 180) % 360, 1f, 1f));
             g.FillEllipse(_brush, cx - centerSize / 2f, cy - centerSize / 2f, centerSize, centerSize);

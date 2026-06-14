@@ -4,17 +4,19 @@ using System.Drawing.Drawing2D;
 
 namespace Reproductor_musical.Visuals
 {
-    public enum VisualizationMode { SpectrumBars, Particles, WaveCircle, GeometricPulse }
-
+    public enum VisualizationMode { SpectrumBars, Particles, WaveCircle, GeometricPulse, FilledSpectrumWave, Oscilloscope}
     public class Visualizer
     {
         private readonly ParticleSystem _particles;
         private readonly SpectrumBarsRenderer _spectrumBars;
         private readonly WaveCircleRenderer _waveCircle;
         private readonly GeometricPulseRenderer _geometricPulse;
+        private readonly FilledSpectrumWaveRenderer _filledWave;
+        private readonly OscilloscopeRenderer _oscilloscope;
 
         private float[] _spectrum = new float[256];
         private float _bassEnergy, _midEnergy, _highEnergy;
+        private float _smoothedBass, _smoothedMid, _smoothedHigh;
         private float _time;
 
         public VisualizationMode Mode { get; set; } = VisualizationMode.SpectrumBars;
@@ -25,6 +27,8 @@ namespace Reproductor_musical.Visuals
             _spectrumBars = new SpectrumBarsRenderer();
             _waveCircle = new WaveCircleRenderer();
             _geometricPulse = new GeometricPulseRenderer();
+            _filledWave = new FilledSpectrumWaveRenderer();
+            _oscilloscope = new OscilloscopeRenderer();
         }
 
         public void UpdateSpectrum(float[] spectrum)
@@ -46,6 +50,10 @@ namespace Reproductor_musical.Visuals
         public void Render(Graphics g, int width, int height)
         {
             _time += 0.016f;
+            float factor = 0.15f;
+            _smoothedBass += (_bassEnergy - _smoothedBass) * factor;
+            _smoothedMid += (_midEnergy - _smoothedMid) * factor;
+            _smoothedHigh += (_highEnergy - _smoothedHigh) * factor;
             DrawBackground(g, width, height);
 
             switch (Mode)
@@ -54,14 +62,20 @@ namespace Reproductor_musical.Visuals
                     _spectrumBars.Render(g, width, height, _spectrum, _time);
                     break;
                 case VisualizationMode.Particles:
-                    _particles.Update(_bassEnergy, _midEnergy, width, height, _time);
+                    _particles.Update(_bassEnergy, _midEnergy, _highEnergy, width, height, _time);
                     _particles.Draw(g, _time);
                     break;
                 case VisualizationMode.WaveCircle:
                     _waveCircle.Render(g, width, height, _spectrum, _bassEnergy, _midEnergy, _highEnergy, _time);
                     break;
                 case VisualizationMode.GeometricPulse:
-                    _geometricPulse.Render(g, width, height, _bassEnergy, _midEnergy, _highEnergy, _time);
+                    _geometricPulse.Render(g, width, height, _spectrum, _bassEnergy, _midEnergy, _highEnergy, _time, _smoothedBass, _smoothedMid, _smoothedHigh);
+                    break;
+                case VisualizationMode.FilledSpectrumWave:
+                    _filledWave.Render(g, width, height, _spectrum, _bassEnergy, _highEnergy, _time);
+                    break;
+                case VisualizationMode.Oscilloscope:
+                    _oscilloscope.Render(g, width, height, _spectrum, _bassEnergy, _highEnergy, _time);
                     break;
             }
 
