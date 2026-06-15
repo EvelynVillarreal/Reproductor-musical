@@ -15,11 +15,16 @@ namespace Reproductor_musical.Forms
         private PictureBox _canvas;
         private Panel _controlPanel;
 
+        // Controles de reproducción y progreso
         private Label _lblTitle, _lblCurrentTime, _lblTotalTime;
         private Button _btnPrev, _btnPlayPause, _btnNext;
         private PictureBox _pbProgress, _pbVolume;
         private ComboBox _cmbMode;
         private Label _lblVolIcon;
+
+        // NUEVOS CONTROLES: Biblioteca en Combo y Botón dedicado
+        private ComboBox _cmbSongs;
+        private Button _btnAddSong;
 
         private Timer _renderTimer;
         private Bitmap _bufferA, _bufferB;
@@ -30,16 +35,18 @@ namespace Reproductor_musical.Forms
         private bool _isDraggingProgress = false;
         private bool _isDraggingVolume = false;
 
-        // --- SISTEMA DE BIBLIOTECA (PLAYLIST) ---
+        // Sistema de Playlist
         private List<string> _playlist = new List<string>();
         private int _currentSongIndex = -1;
         private string _libraryPath;
+
+        // Bandera de seguridad para evitar disparos infinitos entre eventos
+        private bool _isChangingSongFromCode = false;
 
         public MainForm(PlayerController controller)
         {
             _controller = controller;
 
-            // Inicializar la carpeta de la biblioteca local
             _libraryPath = Path.Combine(Application.StartupPath, "MusicLibrary");
             if (!Directory.Exists(_libraryPath))
             {
@@ -52,10 +59,13 @@ namespace Reproductor_musical.Forms
             StartRenderLoop();
         }
 
-        // Carga todas las canciones de la carpeta a la memoria
         private void LoadPlaylistFromFolder()
         {
+            _isChangingSongFromCode = true; // Bloqueamos temporalmente el evento del ComboBox
+
             _playlist.Clear();
+            _cmbSongs.Items.Clear();
+
             if (Directory.Exists(_libraryPath))
             {
                 string[] files = Directory.GetFiles(_libraryPath);
@@ -65,16 +75,27 @@ namespace Reproductor_musical.Forms
                     if (ext == ".mp3" || ext == ".wav" || ext == ".flac" || ext == ".ogg" || ext == ".aac")
                     {
                         _playlist.Add(file);
+                        _cmbSongs.Items.Add(Path.GetFileNameWithoutExtension(file));
                     }
                 }
             }
 
-            // Si hay canciones, pre-cargamos el título de la primera pero sin reproducir
-            if (_playlist.Count > 0 && _currentSongIndex == -1)
+            // Si hay música guardada, pre-seleccionamos la primera pista
+            if (_playlist.Count > 0)
             {
-                _currentSongIndex = 0;
-                _lblTitle.Text = Path.GetFileNameWithoutExtension(_playlist[_currentSongIndex]);
+                if (_currentSongIndex == -1 || _currentSongIndex >= _playlist.Count)
+                    _currentSongIndex = 0;
+
+                _cmbSongs.SelectedIndex = _currentSongIndex;
+                _lblTitle.Text = "Pista actual: " + Path.GetFileNameWithoutExtension(_playlist[_currentSongIndex]);
             }
+            else
+            {
+                _currentSongIndex = -1;
+                _lblTitle.Text = "Biblioteca vacía";
+            }
+
+            _isChangingSongFromCode = false; // Liberamos el evento
         }
 
         private void InitializeSpotifyComponents()
@@ -93,22 +114,55 @@ namespace Reproductor_musical.Forms
                 BackColor = Color.FromArgb(2, 0, 30)
             };
 
+            // --- SECCIÓN IZQUIERDA REESTRUCTURADA ---
             _lblTitle = new Label
             {
-                Text = "➕ Añadir canción a la biblioteca...",
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Text = "Biblioteca vacía",
+                ForeColor = Color.Cyan,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 AutoSize = false,
-                Size = new Size(350, 30),
+                Size = new Size(260, 20)
+            };
+
+            _cmbSongs = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Width = 260,
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(30, 30, 50),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9)
+            };
+            _cmbSongs.SelectedIndexChanged += (s, e) =>
+            {
+                if (_isChangingSongFromCode) return; // Si el cambio viene de los botones ⏮/⏭, no hacemos nada
+                if (_cmbSongs.SelectedIndex >= 0)
+                {
+                    _currentSongIndex = _cmbSongs.SelectedIndex;
+                    LoadCurrentSongToController();
+                    ForcePlay();
+                }
+            };
+
+            _btnAddSong = new Button
+            {
+                Text = "➕ Añadir Música",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(40, 40, 70),
+                FlatStyle = FlatStyle.Flat,
+                Size = new Size(130, 28),
                 Cursor = Cursors.Hand
             };
-            _lblTitle.Click += (s, e) => OnAddSongClicked();
+            _btnAddSong.FlatAppearance.BorderSize = 0;
+            _btnAddSong.Click += (s, e) => OnAddSongClicked();
 
+
+            // --- SECCIÓN CENTRAL ---
             _btnPrev = CreateIconButton("⏮", 16);
             _btnPlayPause = CreateIconButton("▶", 24);
             _btnNext = CreateIconButton("⏭", 16);
 
-            // Conexión real de los botones de Playlist
             _btnPrev.Click += (s, e) => PlayPreviousSong();
             _btnPlayPause.Click += (s, e) => TogglePlayPause();
             _btnNext.Click += (s, e) => PlayNextSong();
@@ -122,6 +176,7 @@ namespace Reproductor_musical.Forms
             _pbProgress.MouseMove += (s, e) => { if (_isDraggingProgress) UpdateProgress(e.X); };
             _pbProgress.MouseUp += (s, e) => { _isDraggingProgress = false; };
 
+            // --- SECCIÓN DERECHA ---
             _cmbMode = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
@@ -143,10 +198,12 @@ namespace Reproductor_musical.Forms
             _pbVolume.MouseMove += (s, e) => { if (_isDraggingVolume) UpdateVolume(e.X); };
             _pbVolume.MouseUp += (s, e) => { _isDraggingVolume = false; };
 
+            // --- REPOSICIONAMIENTO COMPLETO ---
             this.Resize += (s, e) =>
             {
                 int cx = this.Width / 2;
 
+                // Centro (Botones arriba, barra abajo bien separada)
                 _btnPrev.Location = new Point(cx - 75, 20);
                 _btnPlayPause.Location = new Point(cx - 25, 15);
                 _btnNext.Location = new Point(cx + 35, 20);
@@ -155,14 +212,21 @@ namespace Reproductor_musical.Forms
                 _lblTotalTime.Location = new Point(cx + 230, 82);
                 _pbProgress.Location = new Point(cx - 220, 80);
 
-                _lblTitle.Location = new Point(20, 45);
+                // Izquierda apilada verticalmente de forma limpia
+                _lblTitle.Location = new Point(20, 15);
+                _cmbSongs.Location = new Point(20, 45);
+                _btnAddSong.Location = new Point(20, 80);
 
+                // Derecha ordenada
                 _cmbMode.Location = new Point(this.Width - 180, 30);
                 _lblVolIcon.Location = new Point(this.Width - 170, 75);
                 _pbVolume.Location = new Point(this.Width - 140, 78);
             };
 
+            // Inyectar controles al contenedor principal
             _controlPanel.Controls.Add(_lblTitle);
+            _controlPanel.Controls.Add(_cmbSongs);
+            _controlPanel.Controls.Add(_btnAddSong);
             _controlPanel.Controls.Add(_btnPrev);
             _controlPanel.Controls.Add(_btnPlayPause);
             _controlPanel.Controls.Add(_btnNext);
@@ -217,7 +281,6 @@ namespace Reproductor_musical.Forms
             int y = (height - barHeight) / 2;
 
             g.FillRectangle(new SolidBrush(bg), 0, y, width, barHeight);
-
             int fillWidth = (int)(width * percentage);
             g.FillRectangle(new SolidBrush(fg), 0, y, fillWidth, barHeight);
 
@@ -243,13 +306,10 @@ namespace Reproductor_musical.Forms
             _pbVolume.Invalidate();
         }
 
-        // --- LÓGICA DE REPRODUCCIÓN Y LISTA ---
-
         private void TogglePlayPause()
         {
             if (_playlist.Count == 0) return;
 
-            // Si nunca hemos cargado la canción al controlador, la cargamos ahora
             if (_controller.CurrentSong.TotalTime.TotalSeconds == 0 && _currentSongIndex >= 0)
             {
                 LoadCurrentSongToController();
@@ -272,7 +332,7 @@ namespace Reproductor_musical.Forms
         {
             if (_playlist.Count == 0) return;
             _currentSongIndex++;
-            if (_currentSongIndex >= _playlist.Count) _currentSongIndex = 0; // Loop al inicio
+            if (_currentSongIndex >= _playlist.Count) _currentSongIndex = 0;
             LoadCurrentSongToController();
             ForcePlay();
         }
@@ -281,7 +341,7 @@ namespace Reproductor_musical.Forms
         {
             if (_playlist.Count == 0) return;
             _currentSongIndex--;
-            if (_currentSongIndex < 0) _currentSongIndex = _playlist.Count - 1; // Loop al final
+            if (_currentSongIndex < 0) _currentSongIndex = _playlist.Count - 1;
             LoadCurrentSongToController();
             ForcePlay();
         }
@@ -289,7 +349,12 @@ namespace Reproductor_musical.Forms
         private void LoadCurrentSongToController()
         {
             _controller.LoadSong(_playlist[_currentSongIndex]);
-            _lblTitle.Text = Path.GetFileNameWithoutExtension(_playlist[_currentSongIndex]);
+
+            // Sincronizamos el ComboBox visual sin disparar el evento recursivo
+            _isChangingSongFromCode = true;
+            _cmbSongs.SelectedIndex = _currentSongIndex;
+            _lblTitle.Text = "Pista actual: " + Path.GetFileNameWithoutExtension(_playlist[_currentSongIndex]);
+            _isChangingSongFromCode = false;
         }
 
         private void ForcePlay()
@@ -310,21 +375,14 @@ namespace Reproductor_musical.Forms
                         string fileName = Path.GetFileName(sourceFile);
                         string destFile = Path.Combine(_libraryPath, fileName);
 
-                        // Solo copiamos si no existe ya en la biblioteca
                         if (!File.Exists(destFile))
                         {
                             File.Copy(sourceFile, destFile);
                         }
                     }
 
+                    // Recargamos la lista física y visual
                     LoadPlaylistFromFolder();
-
-                    // Si añadimos la primera canción, la preparamos
-                    if (_currentSongIndex == -1 && _playlist.Count > 0)
-                    {
-                        _currentSongIndex = 0;
-                        _lblTitle.Text = Path.GetFileNameWithoutExtension(_playlist[_currentSongIndex]);
-                    }
                 }
             }
         }
@@ -371,7 +429,6 @@ namespace Reproductor_musical.Forms
                 _lblTotalTime.Text = _controller.CurrentSong.TotalTime.ToString(@"m\:ss");
                 _pbProgress.Invalidate();
 
-                // ¡NUEVA MAGIA!: Auto-Play de la siguiente canción cuando la actual termina
                 if (_controller.GetProgress() >= 0.999f)
                 {
                     PlayNextSong();
