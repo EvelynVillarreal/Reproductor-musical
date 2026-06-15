@@ -8,7 +8,8 @@ Un reproductor de música interactivo escrito en **C# (WinForms)** enfocado en l
 
 ## Características Principales
 
-*   **Reproductor de Audio:** Soporte para cargar y reproducir varios formatos de audio (MP3, WAV, FLAC, etc.) con controles intuitivos, barra de progreso interactiva y control de volumen.
+*   **Navegación y Reproducción Avanzada:** Soporte para múltiples formatos de audio gestionados desde una biblioteca local (carpeta `MusicLibrary`). Incluye controles de reproducción completos: salto rápido de tiempo (adelantar/retroceder 10 segundos), navegación libre entre pistas mediante una lista desplegable y reproducción continua automática al finalizar una pista.
+*   **Retroceso Inteligente:** El botón de canción anterior evalúa el tiempo transcurrido; si han pasado más de 3 segundos, reinicia la pista actual, de lo contrario, salta a la pista anterior, brindando una experiencia de usuario más intuitiva y similar a los reproductores comerciales.
 *   **Motor Gráfico a 60 FPS:** El bucle de renderizado (`MainForm.cs`) implementa una técnica de *Doble Buffer optimizado*, que reutiliza los Bitmaps en memoria para evitar el trabajo excesivo del Recolector de Basura (Garbage Collector), asegurando una animación sin cortes ni lag, garantizando 60 fotogramas por segundo fluidos.
 *   **Audio-Reactividad Sensible:** Todos los visualizadores reaccionan directamente a diferentes bandas de frecuencias analizadas (bajos, medios y altos). Usan técnicas de *interpolación lineal (Lerp)* para movimientos suaves en la rotación, pero conservan la energía cruda (raw) en los saltos de tamaño para generar un impacto rítmico (parpadeo o *pulsating*).
 
