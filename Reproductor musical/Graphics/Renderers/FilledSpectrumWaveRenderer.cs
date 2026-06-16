@@ -21,10 +21,7 @@ namespace Reproductor_musical.Visuals
 
             for (int i = 0; i < PointCount; i++)
             {
-<<<<<<< HEAD
-                // 1. LÓGICA
-=======
->>>>>>> 7fc89f95522ce51e54d3b842307e59fbc3143f3b
+
                 // Calculamos 'n' de 0.0 a 1.0 a lo largo del ancho
                 float n = (float)i / (PointCount - 1);
 

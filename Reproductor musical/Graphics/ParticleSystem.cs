@@ -4,7 +4,7 @@ using System.Drawing.Drawing2D;
 
 namespace Reproductor_musical.Visuals
 {
-    public enum ParticleShape { Circle, Diamond, Line, Triangle, Star }
+    public enum ParticleShape { Circle, Diamond, Line, Triangle, Star, Pentagono }
 
     public class Particle
     {
@@ -93,7 +93,8 @@ namespace Reproductor_musical.Visuals
                 else if (dado < 0.55f) p.Shape = ParticleShape.Diamond;
                 else if (dado < 0.70f) p.Shape = ParticleShape.Line;
                 else if (dado < 0.85f) p.Shape = ParticleShape.Triangle;
-                else p.Shape = ParticleShape.Star;
+                else if (dado < 0.95f) p.Shape = ParticleShape.Star;
+                else p.Shape = ParticleShape.Pentagono;
 
                 p.Active = true;
             }
@@ -205,6 +206,20 @@ namespace Reproductor_musical.Visuals
                                     p.Y + (float)Math.Sin(anguloEstrella) * r);
                             }
                             g.FillPolygon(brush, puntos);
+                            break;
+                        case ParticleShape.Pentagono:
+                            int lados = 5;
+                            var pentagono = new PointF[lados];
+                            float radioPentagono = size * 0.6f;
+                            float pentRot = p.Rotation * (float)Math.PI / 180f;
+                            for (int i = 0; i < lados; i++)
+                            {
+                                float anguloPentagono = pentRot + (float)i * (float)Math.PI * 2f / lados;
+                                pentagono[i] = new PointF(
+                                    p.X + (float)Math.Cos(anguloPentagono) * radioPentagono,
+                                    p.Y + (float)Math.Sin(anguloPentagono) * radioPentagono);
+                            }
+                            g.FillPolygon(brush, pentagono);
                             break;
                     }
                 }
