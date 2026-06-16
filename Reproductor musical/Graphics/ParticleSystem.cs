@@ -36,9 +36,6 @@ namespace Reproductor_musical.Visuals
         {
             float centroX = ancho / 2f, centroY = alto / 2f;
 
-            // ==========================================
-            // 🎛️ PANEL DE CONTROL (Modifica estos valores)
-            // ==========================================
             float sensibilidadPicos = 1f; // Potencia del filtro. 1.0 = lineal, 1.5 = balanceado, 3.0 = solo picos extremos.
             float velocidadGlobal = 1.7f;   // Multiplicador general de velocidad de las partículas.
             float gravedad = 0.01f;         // Aceleración hacia abajo (ponlo negativo para que floten hacia arriba).
