@@ -21,7 +21,6 @@ namespace Reproductor_musical.Visuals
 
             for (int i = 0; i < PointCount; i++)
             {
-                // 1. LA LÓGICA DE TU COMPAÑERO
                 // Calculamos 'n' de 0.0 a 1.0 a lo largo del ancho
                 float n = (float)i / (PointCount - 1);
 
@@ -37,7 +36,6 @@ namespace Reproductor_musical.Visuals
                 // Ganancia dinámica idéntica a las barras
                 float ganancia = 1.0f + n * 3.0f;
 
-                // 2. ADAPTACIÓN A LA ONDA
                 // Multiplicamos por la altura disponible y el empuje del bajo
                 // Subimos el tope a 0.85f y aplicamos una curva exponencial a rawValue para que los picos resalten sobre el ruido
                 float targetMagnitude = (float)Math.Pow(rawValue, 0.8) * height * 0.85f * ganancia * spectrumPower;

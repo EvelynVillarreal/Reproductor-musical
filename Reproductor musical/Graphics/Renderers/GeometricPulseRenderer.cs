@@ -38,7 +38,7 @@ namespace Reproductor_musical.Visuals
             DrawRegularPolygon(g, cx, cy, maxRadius * 1.3f, nSides1, _rotacionAcumulada * 0.05f, bassEnergy, smoothedMid, time);
             DrawRegularPolygon(g, cx, cy, maxRadius * 0.8f, nSides2, -_rotacionAcumulada * 0.08f, bassEnergy, smoothedHigh, time + 10f);
 
-            // --- RENDERIZADO DEL VÓRTICE CENTRAL (Estrellas) ---
+            // Estrellas
             for (int layer = 0; layer < 6; layer++)
             {
                 float layerScale = 1f - layer * (0.12f + bassImpact * 0.2f);
@@ -86,9 +86,7 @@ namespace Reproductor_musical.Visuals
             _brush.Color = Color.FromArgb(200, VisualUtils.HsvToColor(centerHue, 1f, 1f));
             g.FillEllipse(_brush, cx - centerSize / 2f, cy - centerSize / 2f, centerSize, centerSize);
 
-            // ============================================================
-            // --- RED DE ÓRBITA CAÓTICA ---
-            // ============================================================
+            // Red
             PointF[] orbitPoints = new PointF[OrbitNodes];
 
             float baseOrbitRadius = maxRadius * 1.1f + (bassEnergy * 250f);

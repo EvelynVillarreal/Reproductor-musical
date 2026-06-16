@@ -11,8 +11,6 @@ namespace Reproductor_musical.Visuals
         private readonly float[] _sinTable = new float[CirclePoints];
         private readonly SolidBrush _brush = new SolidBrush(Color.White);
         private readonly Pen _pen = new Pen(Color.White, 1.5f);
-
-        // EL SECRETO DE LA FLUIDEZ: Arreglo de amortiguación para el círculo
         private readonly float[] _smoothedWave = new float[CirclePoints];
 
         public WaveCircleRenderer()
@@ -39,14 +37,13 @@ namespace Reproductor_musical.Visuals
 
             for (int i = 0; i < CirclePoints; i++)
             {
-                // 1. EL TRUCO DEL ESPEJO (Symmetry)
-                // Vamos de 0 a 100% en la mitad del círculo, y de 100% a 0 en la otra mitad
+                // Simetría
                 int halfPoints = CirclePoints / 2;
                 float percent = i <= halfPoints
                     ? (float)i / halfPoints
                     : (float)(CirclePoints - i) / halfPoints;
 
-                // 2. CURVA DE POTENCIA LOGARÍTMICA (Heredada de tu compañero)
+                // 2. CURVA DE POTENCIA LOGARÍTMICA
                 float floatingIndex = (float)Math.Pow(percent, 1.15) * 119;
                 int idxLow = (int)floatingIndex;
                 int idxHigh = Math.Min(idxLow + 1, spectrum.Length - 1);

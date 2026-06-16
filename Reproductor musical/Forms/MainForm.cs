@@ -17,7 +17,6 @@ namespace Reproductor_musical.Forms
 
         private Label _lblTitle, _lblCurrentTime, _lblTotalTime;
 
-        // NUEVO: Agregados los botones de salto 10s
         private Button _btnPrev, _btnRewind, _btnPlayPause, _btnForward, _btnNext;
 
         private PictureBox _pbProgress, _pbVolume;
@@ -155,7 +154,7 @@ namespace Reproductor_musical.Forms
             _btnAddSong.Click += (s, e) => OnAddSongClicked();
 
 
-            // --- SECCIÓN CENTRAL (Nuevos Botones Integrados) ---
+            // --- SECCIÓN CENTRAL 
             _btnPrev = CreateIconButton("⏮", 16);
             _btnRewind = CreateIconButton("⏪", 16);
             _btnPlayPause = CreateIconButton("▶", 24);

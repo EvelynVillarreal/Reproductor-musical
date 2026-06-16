@@ -52,7 +52,6 @@ namespace Reproductor_musical.Visuals
                 points[i] = new PointF(_smoothedX[i], _smoothedY[i]);
             }
 
-            // --- RENDERIZADO ESTILO CRT (Tubo de Rayos Catódicos) ---
 
             // Color base: Verde clásico de osciloscopio, virando a cian en los picos altos
             float hue = (120f + highEnergy * 60f) % 360f;
