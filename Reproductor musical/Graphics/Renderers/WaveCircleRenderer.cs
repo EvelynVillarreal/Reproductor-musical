@@ -46,7 +46,7 @@ namespace Reproductor_musical.Visuals
                     ? (float)i / halfPoints
                     : (float)(CirclePoints - i) / halfPoints;
 
-                // 2. CURVA DE POTENCIA LOGARÍTMICA (Heredada de tu compañero)
+                // 2. CURVA DE POTENCIA LOGARÍTMICA
                 float floatingIndex = (float)Math.Pow(percent, 1.15) * 119;
                 int idxLow = (int)floatingIndex;
                 int idxHigh = Math.Min(idxLow + 1, spectrum.Length - 1);

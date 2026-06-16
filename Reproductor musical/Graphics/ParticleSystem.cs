@@ -4,7 +4,7 @@ using System.Drawing.Drawing2D;
 
 namespace Reproductor_musical.Visuals
 {
-    public enum ParticleShape { Circle, Diamond, Line, Triangle }
+    public enum ParticleShape { Circle, Diamond, Line, Triangle, Star }
 
     public class Particle
     {
@@ -42,7 +42,7 @@ namespace Reproductor_musical.Visuals
             float sensibilidadPicos = 1f; // Potencia del filtro. 1.0 = lineal, 1.5 = balanceado, 3.0 = solo picos extremos.
             float velocidadGlobal = 1.7f;   // Multiplicador general de velocidad de las partículas.
             float gravedad = 0.01f;         // Aceleración hacia abajo (ponlo negativo para que floten hacia arriba).
-            float friccion = 0.990f;        // Freno del aire. 1.0f = no se frenan nunca. 0.90f = se frenan casi al instante.
+            float friccion = 0.99f;        // Freno del aire. 1.0f = no se frenan nunca. 0.90f = se frenan casi al instante.
                                             // ==========================================
 
             // 1. FILTRO MÁS SUAVE: Usamos la variable de sensibilidad en lugar de un 3 fijo
@@ -92,10 +92,11 @@ namespace Reproductor_musical.Visuals
                 p.Color = VisualUtils.HsvToColor(matiz, 1f, 1f);
 
                 float dado = (float)_aleatorio.NextDouble();
-                if (dado < 0.4f) p.Shape = ParticleShape.Circle;
-                else if (dado < 0.65f) p.Shape = ParticleShape.Diamond;
-                else if (dado < 0.85f) p.Shape = ParticleShape.Line;
-                else p.Shape = ParticleShape.Triangle;
+                if (dado < 0.35f) p.Shape = ParticleShape.Circle;
+                else if (dado < 0.55f) p.Shape = ParticleShape.Diamond;
+                else if (dado < 0.70f) p.Shape = ParticleShape.Line;
+                else if (dado < 0.85f) p.Shape = ParticleShape.Triangle;
+                else p.Shape = ParticleShape.Star;
 
                 p.Active = true;
             }
@@ -191,6 +192,22 @@ namespace Reproductor_musical.Visuals
                                     p.Y + (float)Math.Sin(a) * triSize);
                             }
                             g.FillPolygon(brush, tri);
+                            break;
+                        case ParticleShape.Star:
+                            int puntas = 5;
+                            var puntos = new PointF[puntas * 2];
+                            float radioExterno = size * 0.6f;
+                            float radioInterno = radioExterno * 0.4f;
+                            float starRot = p.Rotation * (float)Math.PI / 180f;
+                            for (int i = 0; i < puntas*2; i++)
+                            {
+                                float r = (i % 2 == 0) ? radioExterno : radioInterno;
+                                float anguloEstrella = starRot + (float)i * (float)Math.PI / puntas;
+                                puntos[i] = new PointF(
+                                    p.X + (float)Math.Cos(anguloEstrella) * r,
+                                    p.Y + (float)Math.Sin(anguloEstrella) * r);
+                            }
+                            g.FillPolygon(brush, puntos);
                             break;
                     }
                 }
